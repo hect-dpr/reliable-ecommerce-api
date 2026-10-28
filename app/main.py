@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.errors import AppError
-from app.routers import carts, products
+from app.routers import admin, carts, orders, products
 
 
 @asynccontextmanager
@@ -39,6 +39,8 @@ async def app_error_handler(_request: Request, exc: AppError):
 
 app.include_router(products.router)
 app.include_router(carts.router)
+app.include_router(orders.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

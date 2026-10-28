@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas import CartItemIn, CartItemUpdate, CartOut
+from app.schemas import CartItemIn, CartItemUpdate, CartOut, CheckoutIn, OrderOut
 from app.services import carts as cart_service
+from app.services import checkout as checkout_service
 
 router = APIRouter(tags=["carts"])
 
@@ -36,3 +39,16 @@ def update_item(
 @router.delete("/carts/{cart_id}/items/{product_id}", response_model=CartOut)
 def remove_item(cart_id: int, product_id: int, db: Session = Depends(get_db)):
     return cart_service.remove_item(db, cart_id, product_id)
+
+
+@router.post("/carts/{cart_id}/checkout", response_model=OrderOut)
+def checkout(
+    cart_id: int,
+    body: Optional[CheckoutIn] = None,
+    db: Session = Depends(get_db),
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+):
+    payload = body or CheckoutIn()
+    return checkout_service.checkout(
+        db, cart_id, idempotency_key, payload.coupon_code
+    )
